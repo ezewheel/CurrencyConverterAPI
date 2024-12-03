@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Common.Enums;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Data.Entities
@@ -11,7 +12,7 @@ namespace Data.Entities
         public required string Username { get; set; }
         public required string Name { get; set; }
         public required string Password { get; set; }
-        public int? SubscriptionId { get; set; }
+        public SubscriptionTypeEnum? SubscriptionId { get; set; }
         public Subscription? Subscription { get; set; }
         public DateTime? SubscribedUntil { get; set; }
         public int ConversionsCount { get; set; }

@@ -1,7 +1,6 @@
-﻿using Common.UserDTOs;
+﻿using Common.DTOs.UserDTOs;
 using Data.Entities;
 using Data.Repositories.AuthRepository;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -23,12 +22,16 @@ namespace Services.AuthService
 
         private string GenerateJwtToken(User user)
         {
-            var securityPassword = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_config["Authentication:SecretForKey"]));
+            var securityPassword = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_config["Authentication:SecretForKey"]!));
 
             SigningCredentials signature = new SigningCredentials(securityPassword, SecurityAlgorithms.HmacSha256);
 
             var claimsForToken = new List<Claim>();
-            claimsForToken.Add(new Claim(ClaimTypes.Name, user.Name));
+            claimsForToken.Add(new Claim(ClaimTypes.Name, user.Username));
+            if (user.Subscription is not null)
+            {
+                claimsForToken.Add(new Claim("role", user.Subscription.Name));
+            }
 
             var jwtSecurityToken = new JwtSecurityToken(
               _config["Authentication:Issuer"],
@@ -46,17 +49,10 @@ namespace Services.AuthService
             return _userRepository.Get();
         }
 
-        private bool ValidatePassword(User user, string password)
-        {
-            PasswordHasher<User> passwordHasher = new PasswordHasher<User>();
-            return passwordHasher
-                .VerifyHashedPassword(user, user.Password, password) == PasswordVerificationResult.Success;
-        }
-
         public string? Login(UserForLoginDto userForLogin)
         {
             User? user = _userRepository.Get(userForLogin.Username);
-            if (user is null || !ValidatePassword(user, userForLogin.Password))
+            if (user is null || user.Password != userForLogin.Password)
             {
                 return null;
             }
@@ -64,12 +60,6 @@ namespace Services.AuthService
             return GenerateJwtToken(user);
         }
 
-        private string HashPassword(User user, string password)
-        {
-            PasswordHasher<User> passwordHasher = new PasswordHasher<User>();
-            return passwordHasher
-                .HashPassword(user, password);
-        }
 
         public string? Register(UserForRegistrationDto userForRegistration)
         {
@@ -83,7 +73,7 @@ namespace Services.AuthService
             {
                 Username = userForRegistration.Username,
                 Name = userForRegistration.Username,
-                Password = "",
+                Password = userForRegistration.Password,
                 SubscriptionId = null,
                 Subscription = null,
                 SubscribedUntil = null,
@@ -91,8 +81,6 @@ namespace Services.AuthService
                 usedTrial = false,
                 isDeleted = false
             };
-
-            user.Password = HashPassword(user, userForRegistration.Password);
 
             _userRepository.Add(user);
             return GenerateJwtToken(user);

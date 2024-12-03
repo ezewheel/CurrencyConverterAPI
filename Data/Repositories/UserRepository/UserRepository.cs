@@ -36,7 +36,6 @@ namespace Data.Repositories.AuthRepository
 
         public void Delete(User user)
         {
-            user.isDeleted = true;
             _context.Users.Update(user);
             _context.SaveChanges();
         }

@@ -1,5 +1,5 @@
-﻿using Common.UserDTOs;
-using Microsoft.AspNetCore.Http;
+﻿using Common.DTOs;
+using Common.DTOs.UserDTOs;
 using Microsoft.AspNetCore.Mvc;
 using Services.AuthService;
 
@@ -16,22 +16,29 @@ namespace CurrencyConverterAPI.Controllers
             _authService = authService;
         }
 
-        [HttpPost]
+        [HttpGet]
         public IActionResult Get()
         {
             return Ok(_authService.Get());
         }
 
-        [HttpPost("login")]
+        [HttpPost]
         public IActionResult Login([FromBody] UserForLoginDto userForLogin)
         {
             string? token = _authService.Login(userForLogin);
             if (token is null)
             {
-                return Unauthorized();
+                return Unauthorized(new ResponseDto<string>()
+                {
+                    Message = "Invalid username or password"
+                });
             }
 
-            return Ok(token);
+            return Ok(new ResponseDto<string>()
+            {
+                Message = "Success",
+                Data = token
+            });
         }
 
         [HttpPost("register")]
@@ -40,10 +47,17 @@ namespace CurrencyConverterAPI.Controllers
             string? token = _authService.Register(userForRegistration);
             if (token is null)
             {
-                return BadRequest();
+                return BadRequest(new ResponseDto<string>()
+                {
+                    Message = "User already exists"
+                });
             }
 
-            return Ok(token);
+            return Ok(new ResponseDto<string>()
+            {
+                Message = "Success",
+                Data = token
+            });
         }
     }
 }

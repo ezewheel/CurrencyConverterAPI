@@ -1,7 +1,6 @@
-﻿using Data.Entities;
+﻿using Common.Enums;
+using Data.Entities;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Reflection.Emit;
 
 namespace Data
 {
@@ -10,6 +9,7 @@ namespace Data
         public DbSet<User> Users { get; set; }
         public DbSet<Subscription> Subscriptions { get; set; }
         public DbSet<Currency> Currencies { get; set; }
+        public DbSet<Conversion> Conversions { get; set; }
 
         public CurrencyConverterContext(DbContextOptions<CurrencyConverterContext> options) : base(options)
         {
@@ -63,32 +63,71 @@ namespace Data
                 entity.Property(c => c.Symbol)
                     .IsRequired();
 
-                entity.Property(c => c.ConversionRate);
+                entity.Property(c => c.ConversionRate)
+                    .IsRequired();
+
+                entity.Property(c => c.CountryCode);
+
+                entity.Property(c => c.IsDeleted)
+                    .IsRequired();
+            });
+
+            modelBuilder.Entity<Conversion>(entity =>
+            {
+                entity.HasKey(c => c.Id);
+
+                entity.Property(c => c.Amount)
+                    .IsRequired();
+
+                entity.Property(c => c.Result)
+                    .IsRequired();
+
+                entity.Property(c => c.Date)
+                    .IsRequired();
             });
 
             modelBuilder.Entity<User>()
                 .HasOne(u => u.Subscription)
-                .WithMany(s => s.Subscribers)
+                .WithMany()
                 .HasForeignKey(u => u.SubscriptionId);
+
+            modelBuilder.Entity<Conversion>()
+                .HasOne(c => c.FromCurrency)
+                .WithMany()
+                .HasForeignKey(c => c.FromCurrencyId);
+
+            modelBuilder.Entity<Conversion>()
+                .HasOne(c => c.ToCurrency)
+                .WithMany()
+                .HasForeignKey(c => c.ToCurrencyId);
+
+            modelBuilder.Entity<Conversion>()
+                .HasOne(c => c.User)
+                .WithMany()
+                .HasForeignKey(c => c.UserId);
+
+            modelBuilder.Entity<Conversion>()
+                .HasIndex(c => c.UserId)
+                .HasDatabaseName("IX_Conversions_UserId");
 
             modelBuilder.Entity<Subscription>().HasData(
                 new Subscription
                 {
-                    Id = 1,
+                    Id = SubscriptionTypeEnum.Free,
                     Name = "Free",
                     Price = 0,
                     ConversionsLimit = 10
                 },
                 new Subscription
                 {
-                    Id = 2,
+                    Id = SubscriptionTypeEnum.Trial,
                     Name = "Trial",
                     Price = 10,
                     ConversionsLimit = 100
                 },
                 new Subscription
                 {
-                    Id = 3,
+                    Id = SubscriptionTypeEnum.Pro,
                     Name = "Pro",
                     Price = 100,
                     ConversionsLimit = null
@@ -102,7 +141,7 @@ namespace Data
                     Username = "admin",
                     Name = "Administrador",
                     Password = "admin",
-                    SubscriptionId = 3,
+                    SubscriptionId = SubscriptionTypeEnum.Pro,
                     SubscribedUntil = DateTime.UtcNow.AddMonths(12),
                     ConversionsCount = 0,
                     isDeleted = false
@@ -113,23 +152,30 @@ namespace Data
                 new Currency
                 {
                     Id = 1,
-                    Name = "USD",
+                    Name = "Dólar estadounidense",
                     Symbol = "USD",
-                    ConversionRate = 1
+                    ConversionRate = 1,
+                    CountryCode = "US",
+                    IsDeleted = false
                 },
                 new Currency
                 {
                     Id = 2,
-                    Name = "ARS",
+                    Name = "Peso argentino",
                     Symbol = "ARS",
-                    ConversionRate = 0.001M
+                    ConversionRate = 0.001M,
+                    CountryCode = "AR",
+                    IsDeleted = false
+
                 },
                 new Currency
                 {
                     Id = 3,
-                    Name = "EUR",
+                    Name = "Euro",
                     Symbol = "EUR",
-                    ConversionRate = 1.09M
+                    ConversionRate = 1.09M,
+                    CountryCode = "EU",
+                    IsDeleted = false
                 }
             );
 

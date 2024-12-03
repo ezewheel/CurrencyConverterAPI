@@ -1,4 +1,4 @@
-﻿using Common.UserDTOs;
+﻿using Common.DTOs.UserDTOs;
 using Data.Entities;
 
 namespace Services.AuthService

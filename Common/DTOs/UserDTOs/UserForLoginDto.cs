@@ -1,4 +1,4 @@
-﻿namespace Common.UserDTOs
+﻿namespace Common.DTOs.UserDTOs
 {
     public class UserForLoginDto
     {

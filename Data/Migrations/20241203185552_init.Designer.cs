@@ -11,14 +11,50 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Data.Migrations
 {
     [DbContext(typeof(CurrencyConverterContext))]
-    [Migration("20241103192425_Added-usedTrial")]
-    partial class AddedusedTrial
+    [Migration("20241203185552_init")]
+    partial class init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.0");
+
+            modelBuilder.Entity("Data.Entities.Conversion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("FromCurrencyId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("Result")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ToCurrencyId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FromCurrencyId");
+
+                    b.HasIndex("ToCurrencyId");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_Conversions_UserId");
+
+                    b.ToTable("Conversions");
+                });
 
             modelBuilder.Entity("Data.Entities.Currency", b =>
                 {
@@ -28,6 +64,12 @@ namespace Data.Migrations
 
                     b.Property<decimal>("ConversionRate")
                         .HasColumnType("TEXT");
+
+                    b.Property<string>("CountryCode")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -46,21 +88,27 @@ namespace Data.Migrations
                         {
                             Id = 1,
                             ConversionRate = 1m,
-                            Name = "USD",
+                            CountryCode = "US",
+                            IsDeleted = false,
+                            Name = "Dólar estadounidense",
                             Symbol = "USD"
                         },
                         new
                         {
                             Id = 2,
                             ConversionRate = 0.001m,
-                            Name = "ARS",
+                            CountryCode = "AR",
+                            IsDeleted = false,
+                            Name = "Peso argentino",
                             Symbol = "ARS"
                         },
                         new
                         {
                             Id = 3,
                             ConversionRate = 1.09m,
-                            Name = "EUR",
+                            CountryCode = "EU",
+                            IsDeleted = false,
+                            Name = "Euro",
                             Symbol = "EUR"
                         });
                 });
@@ -68,7 +116,6 @@ namespace Data.Migrations
             modelBuilder.Entity("Data.Entities.Subscription", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
                     b.Property<int?>("ConversionsLimit")
@@ -154,7 +201,7 @@ namespace Data.Migrations
                             ConversionsCount = 0,
                             Name = "Administrador",
                             Password = "admin",
-                            SubscribedUntil = new DateTime(2025, 11, 3, 19, 24, 24, 610, DateTimeKind.Utc).AddTicks(2805),
+                            SubscribedUntil = new DateTime(2025, 12, 3, 18, 55, 52, 174, DateTimeKind.Utc).AddTicks(6162),
                             SubscriptionId = 3,
                             Username = "admin",
                             isDeleted = false,
@@ -162,18 +209,40 @@ namespace Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Data.Entities.Conversion", b =>
+                {
+                    b.HasOne("Data.Entities.Currency", "FromCurrency")
+                        .WithMany()
+                        .HasForeignKey("FromCurrencyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Data.Entities.Currency", "ToCurrency")
+                        .WithMany()
+                        .HasForeignKey("ToCurrencyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Data.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("FromCurrency");
+
+                    b.Navigation("ToCurrency");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Data.Entities.User", b =>
                 {
                     b.HasOne("Data.Entities.Subscription", "Subscription")
-                        .WithMany("Subscribers")
+                        .WithMany()
                         .HasForeignKey("SubscriptionId");
 
                     b.Navigation("Subscription");
-                });
-
-            modelBuilder.Entity("Data.Entities.Subscription", b =>
-                {
-                    b.Navigation("Subscribers");
                 });
 #pragma warning restore 612, 618
         }

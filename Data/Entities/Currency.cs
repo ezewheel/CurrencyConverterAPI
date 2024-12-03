@@ -11,6 +11,8 @@ namespace Data.Entities
         public string Name { get; set; } = null!;
         public string Symbol { get; set; } = null!;
         public decimal ConversionRate { get; set; }
+        public string? CountryCode { get; set; }
+        public bool IsDeleted { get; set; }
 
     }
 }
